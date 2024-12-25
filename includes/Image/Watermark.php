@@ -242,6 +242,12 @@ class Watermark
      */
     public function do_watermark($attachment_id, $image_path, $image_size, $upload_dir, $metadata = array())
     {
+        // First, create a backup of the original image
+        $backup_path = $this->create_backup($image_path);
+        if (!$backup_path) {
+            error_log('Failed to create backup for image: ' . $image_path);
+            return false;
+        }
 
         // get image mime type
         $mime = wp_check_filetype($image_path);
@@ -328,6 +334,38 @@ class Watermark
         }
     }
 
+    private function create_backup($original_path)
+    {
+        if (empty($original_path) || !file_exists($original_path)) {
+            error_log('Invalid original path for backup: ' . $original_path);
+            return false;
+        }
+
+        // Create backup path by adding .backup before the extension
+        $pathinfo = pathinfo($original_path);
+        $backup_path = $pathinfo['dirname'] . DIRECTORY_SEPARATOR . 
+                      $pathinfo['filename'] . '.backup.' . $pathinfo['extension'];
+
+        error_log('Creating backup from ' . $original_path . ' to ' . $backup_path);
+
+        // Don't overwrite existing backup
+        if (!file_exists($backup_path)) {
+            // Ensure backup directory exists
+            wp_mkdir_p($pathinfo['dirname']);
+
+            // Copy the original file
+            if (!@copy($original_path, $backup_path)) {
+                error_log('Failed to copy original to backup: ' . $backup_path);
+                return false;
+            }
+
+            error_log('Successfully created backup at: ' . $backup_path);
+        } else {
+            error_log('Backup already exists at: ' . $backup_path);
+        }
+
+        return $backup_path;
+    }
 
     private function do_backup($data, $upload_dir, $attachment_id)
     {

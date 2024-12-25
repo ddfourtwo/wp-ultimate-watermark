@@ -24,6 +24,7 @@ define('ULTIMATE_WATERMARK_FILE', __FILE__);
 define('ULTIMATE_WATERMARK_VERSION', '1.0.11');
 define('ULTIMATE_WATERMARK_URI', plugins_url('', ULTIMATE_WATERMARK_FILE));
 define('ULTIMATE_WATERMARK_DIR', plugin_dir_path(ULTIMATE_WATERMARK_FILE));
+define('ULTIMATE_WATERMARK_PLUGIN_PATH', ULTIMATE_WATERMARK_DIR);
 
 include_once plugin_dir_path(ULTIMATE_WATERMARK_FILE) . 'vendor/autoload.php';
 
@@ -47,3 +48,39 @@ function ultimate_watermark()
 }
 
 ultimate_watermark();
+
+// Initialize WooCommerce integration
+require_once ULTIMATE_WATERMARK_PLUGIN_PATH . 'includes/WooCommerce/Product_Integration.php';
+require_once ULTIMATE_WATERMARK_PLUGIN_PATH . 'includes/WooCommerce/Original_Image_Product.php';
+require_once ULTIMATE_WATERMARK_PLUGIN_PATH . 'includes/WooCommerce/Download_Handler.php';
+
+// Check if WooCommerce is active
+if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+    new Ultimate_Watermark\WooCommerce\Product_Integration();
+    new Ultimate_Watermark\WooCommerce\Download_Handler();
+}
+
+// Enqueue frontend scripts
+add_action('wp_enqueue_scripts', function() {
+    if (!is_admin()) {
+        wp_enqueue_style(
+            'ulwm-frontend-image-purchase',
+            plugins_url('assets/css/frontend-image-purchase.css', __FILE__),
+            array(),
+            ULTIMATE_WATERMARK_VERSION
+        );
+
+        wp_enqueue_script(
+            'ulwm-frontend-image-purchase',
+            plugins_url('assets/js/frontend-image-purchase.js', __FILE__),
+            array('jquery'),
+            ULTIMATE_WATERMARK_VERSION,
+            true
+        );
+
+        wp_localize_script('ulwm-frontend-image-purchase', 'ulwm_vars', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ulwm_ajax_nonce')
+        ));
+    }
+});

@@ -1,0 +1,29 @@
+.ulwm-purchase-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #2271b1;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    z-index: 100;
+}
+
+.wp-block-image:hover .ulwm-purchase-btn,
+.wp-post-image:hover + .ulwm-purchase-btn {
+    opacity: 1;
+}
+
+.ulwm-purchase-btn:hover {
+    background: #135e96;
+}
+
+.ulwm-purchase-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
